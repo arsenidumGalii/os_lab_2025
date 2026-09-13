@@ -112,16 +112,16 @@ int main(int argc, char **argv) {
         int end;
         if(i == pnum - 1) end = array_size;
         else end = begin + (int)(array_size/pnum);
-        MinMax temp = GetMinMax(array, begin, end);
+        struct MinMax temp = GetMinMax(array, begin, end);
         if (with_files) {
           char buffer[20];
           snprintf(buffer, sizeof(buffer), "min_max_%d.txt", i);
           // use files here
           FILE* file_output = fopen(buffer, "wb");
-          fwrite(&temp, sizeof(MinMax), 1, file_output);
+          fwrite(&temp, sizeof(struct MinMax), 1, file_output);
           fclose(file_output);
         } else {
-          write(pip_output[i][1], &temp, sizeof(MinMax));
+          write(pip_output[i][1], &temp, sizeof(struct MinMax));
              close(pip_output[i][1]);
         }
         return 0;
@@ -149,16 +149,15 @@ int main(int argc, char **argv) {
       char buffer[20];
       snprintf(buffer, sizeof(buffer), "min_max_%d.txt", i);
       FILE* file_output = fopen(buffer, "rb");
-      fread(&min_max, sizeof(MinMax), 1, file_output);
+      fread(&min_max, sizeof(struct MinMax), 1, file_output);
       fclose(file_output);
       // read from files
     } else {
-      read(pip_output[i][0], &min_max, sizeof(MinMax));
+      read(pip_output[i][0], &min_max, sizeof(struct MinMax));
       close(pip_output[i][0]);
    
       // read from pipes
     }
-
     if (min > min_max.min) min = min_max.min;
     if (max < min_max.max) max = min_max.max;
   }
