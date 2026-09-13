@@ -169,7 +169,14 @@ int main(int argc, char **argv) {
   elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
 
   free(array);
-  if(!with_files){
+  if(with_files){
+    for(int i = 0; i < pnum; i++){ 
+      char buffer[20];
+      snprintf(buffer, sizeof(buffer), "min_max_%d.txt", i);
+      remove(buffer);
+    }
+  }
+  else{
     for(int i = 0; i < pnum; i++) free(pip_output[i]);
     free(pip_output);
   }
