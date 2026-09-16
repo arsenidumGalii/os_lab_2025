@@ -16,7 +16,7 @@ execute: execute_seq.c
 	$(CC) -o execute execute_seq.c
 clean : 
 	rm utils.o find_min_max.o sequential_min_max parallel_min_max execute
-all : execute_seq.c utils.c find_min_max.c parallel_min_max.c sequential_min_max.c 
+all : utils.h find_min_max.h 
 	$(CC) -o utils.o -c utils.c $(CFLAGS)
 	$(CC) -o find_min_max.o -c find_min_max.c $(CFLAGS)
 	$(CC) -o sequential_min_max utils.o find_min_max.o sequential_min_max.c
