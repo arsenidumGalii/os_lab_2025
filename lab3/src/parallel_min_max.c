@@ -58,6 +58,10 @@ int main(int argc, char **argv) {
             break;
           case 2:
             pnum = atoi(optarg);
+            if(pnum <= 0) {
+              printf("pnum is a positive number\n");
+              return 1;
+            }
             // your code here
             // error handling
             break;

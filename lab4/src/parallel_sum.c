@@ -67,6 +67,10 @@ int main(int argc, char **argv) {
             break;
           case 2:
            threads_num = atoi(optarg);
+           if(threads_num <= 0) {
+              printf("threads_num is a positive number\n");
+              return 1;
+            }
             // your code here
             // error handling
             break;
@@ -103,9 +107,10 @@ int main(int argc, char **argv) {
 
   int *array = malloc(sizeof(int) * array_size);
   GenerateArray(array, array_size, seed);
-  
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
   struct SumArgs args[threads_num];
-  for (uint32_t i = 0; i < threads_num; i++) {
+  for (int i = 0; i < threads_num; i++) {
     args[i].array = array;
     args[i].begin = (int)(array_size / threads_num) * i;
     if(i == threads_num - 1) args[i].end = array_size;
@@ -117,13 +122,21 @@ int main(int argc, char **argv) {
   }
   unsigned int total_sum = 0;
   for (int i = 0; i < threads_num; i++) {
-    void* temp = NULL;
+    void* temp   = NULL;
     pthread_join(threads[i], &temp);
     unsigned int sum = (unsigned)(size_t)temp;
     total_sum += sum;
   }
+  struct timeval finish_time;
+  gettimeofday(&finish_time, NULL);
+
+  double elapsed_time = (finish_time.tv_sec - start_time.tv_sec) * 1000.0;
+  elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
+
 
   free(array);
   printf("Total: %u\n", total_sum);
+  printf("Elapsed time: %fms\n", elapsed_time);
+  fflush(NULL);
   return 0;
 }
