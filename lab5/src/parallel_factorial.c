@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 struct MultiplyArgs {
+  int mod;
   int begin;
   int end;
 };
@@ -15,11 +16,12 @@ unsigned int Multiply(const struct MultiplyArgs *args) {
   // TODO: your code here 
   for(int i = args->begin; i < args->end; i++){
     multiply *= i;
+    multiply %= args->mod;
   }
   return multiply;
 }
 
-void *Thread(void *args) {
+void *ThreadMultiply(void *args) {
   struct MultiplyArgs *multiply_args = (struct MultiplyArgs *)args;
   return (void *)(size_t)Multiply(multiply_args);
 }
@@ -47,7 +49,7 @@ int main(int argc, char** argv){
         switch (option_index) {
           case 0:
             k = atoi(optarg);
-            if (seed <= 0) {
+            if (k <= 0) {
               printf("k is a positive number\n");
               return 1;
             }
@@ -89,8 +91,8 @@ int main(int argc, char** argv){
     return 1;
   }
 
-  if (k == 0 || mode == 0 || pnum == 0) {
-    printf("Usage: %s --k \"num\" --mode \"num\" --pnum \"num\" \n",
+  if (k == 0 || mod == 0 || pnum == 0) {
+    printf("Usage: %s --k \"num\" --mod \"num\" --pnum \"num\" \n",
            argv[0]);
     return 1;
   }
@@ -100,12 +102,31 @@ int main(int argc, char** argv){
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
   for (int i = 0; i < pnum; i++) {
-    args[i].begin = (int)(k / threads_num) * i + 1;
-    if(i == threads_num - 1) args[i].end = k + 1;
-    else args[i].end = (int)(k / threads_num) * (i + 1) + 1;
-    if (pthread_create(&threads[i], NULL, ThreadSum, (void *) &args[i])) {
+    args[i].mod = mod;
+    args[i].begin = (int)(k / pnum) * i + 1;
+    if(i == pnum - 1) args[i].end = k + 1;
+    else args[i].end = (int)(k / pnum) * (i + 1) + 1;
+    if (pthread_create(&threads[i], NULL, ThreadMultiply, (void *) &args[i])) {
       printf("Error: pthread_create failed!\n");
       return 1;
     }
   }
+  unsigned int total_multiply = 1;
+  for (int i = 0; i < pnum; i++) {
+    void* temp   = NULL;
+    pthread_join(threads[i], &temp);
+    unsigned int multiply = (unsigned)(size_t)temp;
+    total_multiply *= multiply;
+  }
+  struct timeval finish_time;
+  gettimeofday(&finish_time, NULL);
+
+  double elapsed_time = (finish_time.tv_sec - start_time.tv_sec) * 1000.0;
+  elapsed_time += (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
+
+
+  printf("Factorial mod %d: %u\n", mod, total_multiply % mod);
+  printf("Elapsed time: %fms\n", elapsed_time);
+  fflush(NULL);
+  return 0;
 }
