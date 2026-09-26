@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -12,6 +13,7 @@
 #include <sys/types.h>
 
 #include "pthread.h"
+#include "utils.h"
 
 struct FactorialArgs {
   uint64_t begin;
@@ -19,22 +21,11 @@ struct FactorialArgs {
   uint64_t mod;
 };
 
-uint64_t MultModulo(uint64_t a, uint64_t b, uint64_t mod) {
-  uint64_t result = 0;
-  a = a % mod;
-  while (b > 0) {
-    if (b % 2 == 1)
-      result = (result + a) % mod;
-    a = (a * 2) % mod;
-    b /= 2;
-  }
-
-  return result % mod;
-}
-
 uint64_t Factorial(const struct FactorialArgs *args) {
   uint64_t ans = 1;
-
+  for(uint64_t i = args->begin; i < args->end; i++){
+    ans = MultModulo(ans, i, args->mod);
+  }
   // TODO: your code here
 
   return ans;
@@ -42,7 +33,7 @@ uint64_t Factorial(const struct FactorialArgs *args) {
 
 void *ThreadFactorial(void *args) {
   struct FactorialArgs *fargs = (struct FactorialArgs *)args;
-  return (void *)(uint64_t *)Factorial(fargs);
+  return (void *)(uintptr_t)Factorial(fargs);
 }
 
 int main(int argc, char **argv) {
@@ -146,6 +137,7 @@ int main(int argc, char **argv) {
       }
 
       pthread_t threads[tnum];
+      struct FactorialArgs args[tnum];
 
       uint64_t begin = 0;
       uint64_t end = 0;
@@ -156,11 +148,11 @@ int main(int argc, char **argv) {
 
       fprintf(stdout, "Receive: %llu %llu %llu\n", begin, end, mod);
 
-      struct FactorialArgs args[tnum];
       for (uint32_t i = 0; i < tnum; i++) {
         // TODO: parallel somehow
-        args[i].begin = 1;
-        args[i].end = 1;
+        args[i].begin = begin + i * (int)((end - begin) / tnum);
+        if(i == tnum - 1) args[i].end = end;
+        else args[i].end = begin + (i + 1) * (int)((end - begin) / tnum);
         args[i].mod = mod;
 
         if (pthread_create(&threads[i], NULL, ThreadFactorial,
@@ -171,9 +163,10 @@ int main(int argc, char **argv) {
       }
 
       uint64_t total = 1;
+      void* thread_result = NULL;
       for (uint32_t i = 0; i < tnum; i++) {
-        uint64_t result = 0;
-        pthread_join(threads[i], (void **)&result);
+        pthread_join(threads[i], &thread_result);
+        uint64_t result = (uint64_t)(uintptr_t) thread_result;
         total = MultModulo(total, result, mod);
       }
 
