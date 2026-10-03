@@ -5,11 +5,11 @@ all : utils.o client server
 
 clean : 
 	rm server client utils.o
-client : 
+client : client.c
 	$(CC) utils.o client.c -o client
-server : 
+server : server.c
 	$(CC) utils.o server.c -o server
-utils.o : utils.h
+utils.o : utils.h utils.c
 	$(CC) -c utils.c $(CFLAGS)
 demonstrate:
 	./server --port 20001 --tnum 2 > /dev/null 2>&1 &

@@ -5,6 +5,9 @@
 #include <getopt.h>
 #include <pthread.h>
 
+unsigned int total_multiply = 1;
+pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
+
 struct MultiplyArgs {
   int mod;
   int begin;
@@ -18,6 +21,9 @@ unsigned int Multiply(const struct MultiplyArgs *args) {
     multiply *= i;
     multiply %= args->mod;
   }
+  pthread_mutex_lock(&mut);
+  total_multiply *= multiply;
+  pthread_mutex_unlock(&mut);
   return multiply;
 }
 
@@ -111,12 +117,17 @@ int main(int argc, char** argv){
       return 1;
     }
   }
-  unsigned int total_multiply = 1;
+  unsigned int total_multiply_check = 1;
   for (int i = 0; i < pnum; i++) {
     void* temp   = NULL;
     pthread_join(threads[i], &temp);
     unsigned int multiply = (unsigned)(size_t)temp;
-    total_multiply *= multiply;
+    total_multiply_check *= multiply;
+  }
+  //total_multiply += 1;
+  if(total_multiply != total_multiply_check) {
+    printf("Error occured in calculation factorial\n");
+    exit(1);
   }
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
